@@ -29,8 +29,8 @@ class DjangoPaginationConnectionField(DjangoFilterConnectionField):
         self._base_args = None
 
         kwargs.setdefault("limit", Int(description="Query limit"))
-        kwargs.setdefault("offset", Int(description="Query offset"))
         kwargs.setdefault("ordering", String(description="Query order"))
+        kwargs.setdefault("page_number", Int(description="Query page number"))
 
         super(DjangoPaginationConnectionField, self).__init__(
             type,
@@ -106,7 +106,7 @@ def connection_from_list_slice(
 ):
     args = args or {}
     limit = args.get("limit", None)
-    offset = args.get("offset", 0)
+    page_num = args.get("page_number", 1)
 
     if limit is None:
         return connection_type(
@@ -121,9 +121,7 @@ def connection_from_list_slice(
         assert limit > 0, "Limit must be positive integer greater than 0"
 
         paginator = Paginator(list_slice, limit)
-        _slice = list_slice[offset:(offset+limit)]
 
-        page_num = math.ceil(offset/limit) + 1
         page_num = (
             paginator.num_pages
             if page_num > paginator.num_pages
