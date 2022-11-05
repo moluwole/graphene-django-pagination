@@ -1,4 +1,4 @@
-from graphene import ObjectType, Boolean
+from graphene import ObjectType, Boolean, Int
 
 
 class PageInfoExtra(ObjectType):
@@ -12,4 +12,10 @@ class PageInfoExtra(ObjectType):
         required=True,
         name="hasPreviousPage",
         description="When paginating backwards, are there more items?",
+    )
+
+    total_pages = Int(
+        required=True,
+        name="totalPages",
+        description="Total Number of pages for Pagination."
     )

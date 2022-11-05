@@ -43,6 +43,7 @@ class DjangoPaginationConnectionField(DjangoFilterConnectionField):
 
         class NodeConnection(PaginationConnection):
             total_count = Int()
+            total_pages = Int()
 
             class Meta:
                 node = self._type
@@ -130,10 +131,11 @@ def connection_from_list_slice(
         page = paginator.page(page_num)
 
         return connection_type(
-            results=_slice,
+            results=page,
             page_info=pageinfo_type(
                 has_previous_page=page.has_previous(),
-                has_next_page=page.has_next()
+                has_next_page=page.has_next(),
+                total_pages=paginator.num_pages
             )
         )
 
