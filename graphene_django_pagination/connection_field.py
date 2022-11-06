@@ -28,7 +28,7 @@ class DjangoPaginationConnectionField(DjangoFilterConnectionField):
         self._extra_filter_meta = extra_filter_meta
         self._base_args = None
 
-        kwargs.setdefault("limit", Int(description="Query limit"))
+        kwargs.setdefault("page_size", Int(description="Query page size. Size of items to return (limit)"))
         kwargs.setdefault("ordering", String(description="Query order"))
         kwargs.setdefault("page_number", Int(description="Query page number"))
 
@@ -43,7 +43,6 @@ class DjangoPaginationConnectionField(DjangoFilterConnectionField):
 
         class NodeConnection(PaginationConnection):
             total_count = Int()
-            total_pages = Int()
 
             class Meta:
                 node = self._type
@@ -90,7 +89,7 @@ class DjangoPaginationConnectionField(DjangoFilterConnectionField):
         if ordering:
             iterable = connection_from_list_ordering(iterable, ordering)
 
-        connection = connection_from_list_slice(
+        connection = connection_from_queryset(
             iterable,
             arguments,
             connection_type=connection,
@@ -102,42 +101,38 @@ class DjangoPaginationConnectionField(DjangoFilterConnectionField):
         return connection
 
 
-def connection_from_list_slice(
-    list_slice, args=None, connection_type=None, pageinfo_type=None
+def connection_from_queryset(
+    queryset, args=None, connection_type=None, pageinfo_type=None
 ):
     args = args or {}
-    limit = args.get("limit", None)
+    page_size = args.get("page_size", 10)
     page_num = args.get("page_number", 1)
 
-    if limit is None:
-        return connection_type(
-            results=list_slice,
-            page_info=pageinfo_type(
-                has_previous_page=False,
-                has_next_page=False
-            )
-        )
-    else:
-        assert isinstance(limit, int), "Limit must be of type int"
-        assert limit > 0, "Limit must be positive integer greater than 0"
+    assert isinstance(page_size, int), "Page Size must be of type int"
+    assert page_size > 0, "Page Size must be positive integer greater than 0"
 
-        paginator = Paginator(list_slice, limit)
+    assert isinstance(page_num, int), "Page number must be of type int"
+    assert page_num > 0, "Page number must be positive integer greater than 0"
 
-        page_num = (
-            paginator.num_pages
-            if page_num > paginator.num_pages
-            else page_num
-        )
-        page = paginator.page(page_num)
 
-        return connection_type(
-            results=page,
-            page_info=pageinfo_type(
-                has_previous_page=page.has_previous(),
-                has_next_page=page.has_next(),
-                total_pages=paginator.num_pages
-            )
+
+    paginator = Paginator(queryset, page_size)
+
+    page_num = (
+        paginator.num_pages
+        if page_num > paginator.num_pages
+        else page_num
+    )
+    page = paginator.page(page_num)
+
+    return connection_type(
+        results=page,
+        page_info=pageinfo_type(
+            has_previous_page=page.has_previous(),
+            has_next_page=page.has_next(),
+            total_pages=paginator.num_pages
         )
+    )
 
 
 def connection_from_list_ordering(items_list, ordering):
