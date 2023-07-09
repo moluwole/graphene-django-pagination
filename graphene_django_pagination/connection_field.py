@@ -31,6 +31,13 @@ class DjangoPaginationConnectionField(DjangoFilterConnectionField):
         kwargs.setdefault("page_size", Int(description="Query page size. Size of items to return (limit)"))
         kwargs.setdefault("ordering", String(description="Query order"))
         kwargs.setdefault("page_number", Int(description="Query page number"))
+        
+        kwargs.pop("offset", None)
+        kwargs.pop("first", None)
+        kwargs.pop("last", None)
+        kwargs.pop("before", None)
+        kwargs.pop("after", None)
+
 
         super(DjangoPaginationConnectionField, self).__init__(
             type,
